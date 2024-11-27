@@ -103,3 +103,56 @@ def delete_item(id: int):
     if cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail="Item not found.")
     return {"message": "Item deleted successfully."}
+
+# CRUD for Orders
+@app.post("/orders")
+def create_order(order: Order):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    customer = conn.execute("SELECT id FROM customers WHERE id = ?", (order.customer_id,)).fetchone()
+    item = conn.execute("SELECT id FROM items WHERE id = ?", (order.item_id,)).fetchone()
+    if not customer:
+        raise HTTPException(status_code=400, detail="Invalid customer_id.")
+    if not item:
+        raise HTTPException(status_code=400, detail="Invalid item_id.")
+    cursor.execute(
+        "INSERT INTO orders (customer_id, item_id, quantity) VALUES (?, ?, ?)",
+        (order.customer_id, order.item_id, order.quantity),
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Order created successfully!"}
+ 
+@app.get("/orders/{id}")
+def get_order(id: int):
+    conn = get_db_connection()
+    order = conn.execute("SELECT * FROM orders WHERE id = ?", (id,)).fetchone()
+    conn.close()
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    return dict(order)
+ 
+@app.put("/orders/{id}")
+def update_order(id: int, order: Order):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE orders SET customer_id = ?, item_id = ?, quantity = ? WHERE id = ?",
+        (order.customer_id, order.item_id, order.quantity, id),
+    )
+    conn.commit()
+    conn.close()
+    if cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    return {"message": "Order updated successfully."}
+ 
+@app.delete("/orders/{id}")
+def delete_order(id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM orders WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    if cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    return {"message": "Order deleted successfully."}
