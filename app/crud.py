@@ -63,3 +63,42 @@ def delete_item(id):
     deleted = cursor.rowcount > 0
     conn.close()
     return deleted
+
+# CRUD for Orders
+def create_order(customer_id, item_id, quantity):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    customer = conn.execute("SELECT id FROM customers WHERE id = ?", (customer_id,)).fetchone()
+    item = conn.execute("SELECT id FROM items WHERE id = ?", (item_id,)).fetchone()
+    if not customer or not item:
+        conn.close()
+        raise ValueError("Invalid customer_id or item_id.")
+    cursor.execute("INSERT INTO orders (customer_id, item_id, quantity) VALUES (?, ?, ?)",
+                   (customer_id, item_id, quantity))
+    conn.commit()
+    conn.close()
+ 
+def get_order(id):
+    conn = get_db_connection()
+    order = conn.execute("SELECT * FROM orders WHERE id = ?", (id,)).fetchone()
+    conn.close()
+    return order
+ 
+def update_order(id, customer_id, item_id, quantity):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE orders SET customer_id = ?, item_id = ?, quantity = ? WHERE id = ?",
+                   (customer_id, item_id, quantity, id))
+    conn.commit()
+    updated = cursor.rowcount > 0
+    conn.close()
+    return updated
+ 
+def delete_order(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM orders WHERE id = ?", (id,))
+    conn.commit()
+    deleted = cursor.rowcount > 0
+    conn.close()
+    return deleted
