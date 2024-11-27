@@ -62,3 +62,44 @@ def delete_customer(id: int):
     if cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail="Customer not found.")
     return {"message": "Customer deleted successfully."}
+
+# CRUD for Items
+@app.post("/items")
+def create_item(item: Item):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO items (name, price) VALUES (?, ?)", (item.name, item.price))
+    conn.commit()
+    conn.close()
+    return {"message": "Item created successfully!"}
+ 
+@app.get("/items/{id}")
+def get_item(id: int):
+    conn = get_db_connection()
+    item = conn.execute("SELECT * FROM items WHERE id = ?", (id,)).fetchone()
+    conn.close()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found.")
+    return dict(item)
+ 
+@app.put("/items/{id}")
+def update_item(id: int, item: Item):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE items SET name = ?, price = ? WHERE id = ?", (item.name, item.price, id))
+    conn.commit()
+    conn.close()
+    if cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Item not found.")
+    return {"message": "Item updated successfully."}
+ 
+@app.delete("/items/{id}")
+def delete_item(id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM items WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    if cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Item not found.")
+    return {"message": "Item deleted successfully."}
